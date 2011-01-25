@@ -7,6 +7,7 @@
 #define FORK 32     //00010000
 
 #define SIDE 16 //number of cells per side
+#define SIDE_SIZE 20
 
 #define GOALX 7
 #define GOALY 7
