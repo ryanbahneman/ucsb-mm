@@ -75,6 +75,7 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FloodFill.h" />
     <ClInclude Include="MazeBuild.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="Maze_Definitions.h" />
@@ -82,8 +83,9 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MazeBuild.cpp" />
     <ClCompile Include="FloodFill.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MazeBuild.cpp" />
     <ClCompile Include="GUI.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

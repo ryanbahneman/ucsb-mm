@@ -9,6 +9,9 @@
 #define SIDE 16 //number of cells per side
 #define SIDE_SIZE 20
 
+#define NUM_ROWS 16
+#define NUM_COLS 16
+
 #define GOALX 7
 #define GOALY 7
 #define STARTX 0
