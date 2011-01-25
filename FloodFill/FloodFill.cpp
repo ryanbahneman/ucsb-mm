@@ -4,6 +4,7 @@
 #include <iostream>
 #include <time.h>
 #include <GL/glut.h>
+#include <stdlib.h>
 #include <queue>
 using namespace std;
 
@@ -222,12 +223,15 @@ void renderScene(void)
 
 int main(int argc, char** argv)
 {
+	 /* initialize random seed: */
+	srand( time(NULL) );
+
 	glutInit(&argc, argv);
 	Q.empty();
 	node p = {x,y};
 	
 	Q.push(p);	
-	MakeMaze(completeMazeArray,2);
+	MakeMaze(completeMazeArray,10);
 
 
 	glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
