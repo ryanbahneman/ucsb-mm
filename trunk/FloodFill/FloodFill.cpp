@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Maze_Definitions.h"
+#include "MazeBuild.h"
 #include <iostream>
 #include <time.h>
 #include <GL/glut.h>
@@ -10,40 +11,25 @@ struct node
 {
 	int x;
 	int y;
-	int direction
+	int direction;
 };
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-#define NUM_ROWS 8
-#define NUM_COLS 8
+#define NUM_ROWS 16
+#define NUM_COLS 16
 
 queue<node> Q;
 queue<node> emptyMazeQueue;
 int x = 0;
 int y = 0;
 
-void determineFork(int actualMaze[][8], int x, int y);
-void determineInitialDirection(int actualMaze, int x, int y);
+void determineFork(int actualMaze[][NUM_COLS], int x, int y);
+void determineInitialDirection(int actualMaze[][NUM_COLS], int x, int y);
 
-int completeMazeArray[8][8] = {               {11,15,9 , 1, 5, 5,1 , 3},
-											  {10,15,13, 2,15,15,10,10},
-											  {10,15,13, 2,10,10,10,10},
-											  {10,15,13, 2,10,10,10,10},
-											  {10,15,13, 2,10,10,10,10},
-											  {10,15,13, 2,10,10,10,10},
-											  {10,15,15,14,15,15,10,10},
-											  {12, 5, 5, 5, 5, 5, 5, 6} };
-
-int emptyMazeArray[8][8] =   {                {9,1,1,1,1,1,1,3},
-											  {8,0,0,0,0,0,0,2},
-											  {8,0,0,0,0,0,0,2},
-											  {8,0,0,0,0,0,0,2},
-											  {8,0,0,0,0,0,0,2},
-											  {8,0,0,0,0,0,0,2},
-											  {8,0,0,0,0,0,0,2},
-											  {12,4,4,4,4,4,4,6} };
+unsigned int completeMazeArray[16][16]; 
+unsigned int emptyMazeArray[NUM_ROWS][NUM_COLS];
 
 void sleep(unsigned int mseconds)
 {
@@ -61,7 +47,7 @@ void glEnable2D()
     glPushMatrix();
     glLoadIdentity();
 }
-void drawGridUsingSquares(int arr[][8], int xpos, int ypos, int size, int rows, int columns)
+void drawGridUsingSquares(unsigned int arr[][NUM_COLS], int xpos, int ypos, int size, int rows, int columns)
 {
 		int x = xpos;
 		int y = ypos;		
@@ -74,8 +60,7 @@ void drawGridUsingSquares(int arr[][8], int xpos, int ypos, int size, int rows, 
 		{
 			for (int j = 0; j < columns; j++)
 			{				
-					
-				
+							
 				if ((arr[i][j] & FORK) == FORK)
 				{
 					glColor3f(0,1,0);
@@ -88,7 +73,7 @@ void drawGridUsingSquares(int arr[][8], int xpos, int ypos, int size, int rows, 
 				}	
 				else if ((arr[i][j] & TRAVELED) == TRAVELED)
 				{
-					glColor3f(0,0,1);
+					glColor3f(1,0,1);
 					glBegin(GL_QUADS);
 						glVertex2f(xpos+size*j,			    ypos+size*i);     // TOP LEFT	
 						glVertex2f(xpos+size*j+size,		ypos+size*i);     // TOP RIGHT
@@ -142,7 +127,7 @@ void drawGridUsingSquares(int arr[][8], int xpos, int ypos, int size, int rows, 
 		glColor3f(0,0,1);
 	
 }
-void determineFork(int actualMaze[][8], int x, int y)
+void determineFork(unsigned int actualMaze[][NUM_COLS], int x, int y)
 {
 	// if there are more than one direction to choosefrom, set a fork at the specific location
 	if ((actualMaze[x][y] & 15) != NORTH && (actualMaze[x][y] & 15) != SOUTH && (actualMaze[x][y] & 15) != EAST && (actualMaze[x][y] & 15) != WEST)
@@ -152,8 +137,31 @@ void determineFork(int actualMaze[][8], int x, int y)
 
 }
 
+void determineInitialDirection(unsigned int actualMaze[][NUM_COLS], int x, int y, queue<node> q)
+{
+	if ((actualMaze[x][y] & NORTH) == 0)
+	{
+		node n = {x-1,y,NORTH};
+		q.push(n);
+	}
+	if ((actualMaze[x][y] & SOUTH) == 0)
+	{
+		node n = {x+1,y,SOUTH};
+		q.push(n);
+	}
+	if ((actualMaze[x][y] & WEST) == 0)
+	{
+		node n = {x,y-1,WEST};
+		q.push(n);
+	}
+	if ((actualMaze[x][y] & EAST) == 0)
+	{
+		node n = {x,y+1,EAST};
+		q.push(n);
+	}
+}
 
-void checkSurroundingWalls(int actualMaze[][8], int unmappedMaze[][8], int x, int y)
+void checkSurroundingWalls(unsigned int actualMaze[][NUM_COLS], unsigned int unmappedMaze[][NUM_COLS], int x, int y)
 {
 	if ((actualMaze[x][y] & NORTH) == NORTH)
 		unmappedMaze[x][y] |= NORTH;
@@ -182,31 +190,31 @@ void renderScene(void)
 		if (p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & SOUTH) == 0 && (completeMazeArray[p.x+1][p.y] & TRAVELED) != TRAVELED ) // CHECK SOUTH
 		{
 			completeMazeArray[p.x+1][p.y] |= 16;
-			node a = {p.x+1,p.y};			
+			node a = {p.x+1,p.y,SOUTH};			
 			Q.push(a);
 		}			
 		if (p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & EAST) == 0 && (completeMazeArray[p.x][p.y+1] & TRAVELED) != TRAVELED ) // CHECK EAST
 		{
 			completeMazeArray[p.x][p.y+1] |= 16;
-			node a = {p.x,p.y+1};			
+			node a = {p.x,p.y+1,EAST};			
 			Q.push(a);
 		}	
 		if (p.x > 0 && p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & NORTH) == 0 && (completeMazeArray[p.x-1][p.y] & TRAVELED) != TRAVELED ) // CHECK NORTH
 		{
 			completeMazeArray[p.x-1][p.y] |= 16;
-			node a = {p.x-1,p.y};
+			node a = {p.x-1,p.y,NORTH};
 			Q.push(a);			
 		
 		}		
 		if (p.y > 0 && p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & WEST) == 0 && (completeMazeArray[p.x][p.y-1] & TRAVELED) != TRAVELED ) // CHECK WEST
 		{
 			completeMazeArray[p.x][p.y-1] |= 16;
-			node a = {p.x,p.y-1};
+			node a = {p.x,p.y-1,WEST};
 			Q.push(a);			
 		}
 	}
-	drawGridUsingSquares(completeMazeArray,5,5,30, NUM_ROWS,NUM_COLS);
-	drawGridUsingSquares(emptyMazeArray,265,5,30, NUM_ROWS,NUM_COLS);
+	drawGridUsingSquares(completeMazeArray,5,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
+	drawGridUsingSquares(emptyMazeArray,NUM_COLS*SIDE_SIZE+NUM_COLS*2,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
 
 	sleep(100);
 	glFlush();	
@@ -219,7 +227,9 @@ int main(int argc, char** argv)
 	node p = {x,y};
 	
 	Q.push(p);	
-	
+	MakeMaze(completeMazeArray,2);
+
+
 	glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
 	glutInitWindowPosition(100,100);
 	glutInitWindowSize(SCREEN_WIDTH,SCREEN_HEIGHT);	
