@@ -2,6 +2,7 @@
 #include "GUI.h"
 #include "MazeBuild.h"
 #include "FloodFill.h"
+#include "Maze_Definitions.h"
 
 #include <queue>
 #include <GL/glut.h>
@@ -9,6 +10,7 @@
 // initialization of the global variables used for the gui
 unsigned int completeMazeArray[16][16]; 
 unsigned int emptyMazeArray[NUM_ROWS][NUM_COLS];
+unsigned int floodValues[NUM_ROWS][NUM_COLS];
 queue<node> Q;
 
 // METHODS USED FOR GUI
@@ -128,7 +130,12 @@ void renderScene(void)
 	glLoadIdentity();
 	glEnable2D();	
 
-	floodFill(completeMazeArray,emptyMazeArray); // currently does nothing
+
+	Loc goal;
+	goal.x = 8;
+	goal.y = 8;
+
+	floodFill(completeMazeArray,floodValues, goal); // currently does nothing
 
 
 
