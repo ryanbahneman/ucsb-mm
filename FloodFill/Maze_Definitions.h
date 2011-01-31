@@ -1,3 +1,6 @@
+
+#pragma once
+
 #define NORTH 1     //00000001
 #define EAST 2      //00000010
 #define SOUTH 4     //00000100
@@ -17,3 +20,6 @@
 #define STARTX 0
 #define STARTY 0
 
+struct Loc{
+	unsigned int x, y;
+};
