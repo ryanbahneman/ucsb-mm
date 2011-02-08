@@ -8,6 +8,7 @@
 #define ALLWALLS 15 //00001111
 #define TRAVELED 16 //00010000
 #define FORK 32     //00010000
+#define CURRENT 64  //00010000
 
 #define SIDE 16 //number of cells per side
 #define SIDE_SIZE 20
@@ -20,6 +21,7 @@
 #define STARTX 0
 #define STARTY 0
 
-struct Loc{
+struct Loc
+{
 	unsigned int x, y;
 };
