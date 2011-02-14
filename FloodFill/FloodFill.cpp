@@ -1,27 +1,108 @@
 #include "stdafx.h"
 #include "FloodFill.h"
 #include "Maze_Definitions.h"
+#include <GL/glut.h>
+
+
+void sleep2(unsigned int mseconds)
+{
+    clock_t goal = mseconds + clock();
+    while (goal > clock());
+}
 
 void mapSurroundings(unsigned int actualMaze[][NUM_COLS], unsigned int unmappedMaze[][NUM_COLS], int x, int y)
 {
 	if ((actualMaze[x][y] & NORTH) == NORTH)
+	{
 		unmappedMaze[x][y] |= NORTH;
+		if (x-1 >= 0)
+		unmappedMaze[x-1][y] |= SOUTH;
+	}
 	if ((actualMaze[x][y] & SOUTH) == SOUTH)
+	{
 		unmappedMaze[x][y] |= SOUTH;
+		if (x+1 <= 15)
+		unmappedMaze[x+1][y] |= NORTH;
+	}		
 	if ((actualMaze[x][y] & WEST) == WEST)
+	{
 		unmappedMaze[x][y] |= WEST;
+		if (y- 1 >= 0)
+		unmappedMaze[x][y-1] |= EAST;
+	}		
 	if ((actualMaze[x][y] & EAST) == EAST)
-		unmappedMaze[x][y] |= EAST;	
+	{
+		unmappedMaze[x][y] |= EAST;
+		if (y+1 >= 0)
+		unmappedMaze[x][y+1] |= WEST;
+	}
 }
 
-void solveMaze(unsigned int currentMazeArray[][16], unsigned int emptyMazeArray[][16], Loc start)
+
+
+void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], unsigned int emptyMazeArray[][16], Loc start, Loc* current)
 {
-	int x = start.x;
-	int y = start.y;
+	//mapSurroundings(currentMazeArray,emptyMazeArray,current->x, current->y);
+	
+	int x = current->x;
+	int y = current->y;
+	//glFlush();
+
+	//sleep2(1000);
+	cout << "X: " << x << " " << "Y: " << y << endl;
+
+	int min = 1000;
+
+	if((current->y >= 0) && ((emptyMazeArray[current->x][current->y] & WEST) != WEST)) 
+	{
+		
+		cout << "WEST";
+		if (min > floodValues[current->x][current->y-1])
+		{
+			cout << "----";
+			min = floodValues[current->x][current->y-1];
+			x = current->x;
+			y = current->y-1;
+		}	
+	}
+	if((current->y <= 15) && ((emptyMazeArray[current->x][current->y] & EAST) != EAST)) 
+	{
+		cout << "EAST" << endl;
+		if (min > floodValues[current->x][current->y+1])
+		{
+			
+			min = floodValues[current->x][current->y+1];
+			x = current->x;
+			y = current->y+1;
+		}	
+	}
+	if((current->x <= 15) && ((emptyMazeArray[current->x][current->y] & SOUTH) != SOUTH)) 
+	{
+		cout << "SOUTH";
+		if (min > floodValues[current->x+1][current->y])
+		{
+			min = floodValues[current->x+1][current->y];
+			x = current->x+1;
+			y = current->y;
+		}	
+	}
+	if((current->x >= 0) && ((emptyMazeArray[current->x][current->y] & NORTH) != NORTH)) 
+	{
+		cout << "NORTH" << endl;
+		if (min > floodValues[current->x-1][current->y])
+		{
+			min = floodValues[current->x-1][current->y];
+			x = current->x-1;
+			y = current->y;
+		}	
+	}
+
+	current->x = x;
+	current->y = y;
+
+	cout << endl;
 
 	//if (emptyMazeArray
-
-
 }
 
 //===================================FLOOD FILL==========================================//
