@@ -12,15 +12,11 @@ unsigned int completeMazeArray[16][16];
 unsigned int emptyMazeArray[NUM_ROWS][NUM_COLS];
 unsigned int floodValues[NUM_ROWS][NUM_COLS];
 
+unsigned int anotherEmptyArray[NUM_ROWS][NUM_COLS];
+unsigned int floodValuesForResult[NUM_ROWS][NUM_COLS];
+
 // needs to be here so it can use while loop in gui
-Loc currentQueue[256];
-Loc nextQueue[256];
-
-Loc currentStack[256];
-Loc nextStack[256];
-
-int currentStackLength = 0;
-int nextStackLength = 0;
+Loc currentLoc;
 
 queue<node> Q;
 
@@ -48,7 +44,9 @@ void drawGridUsingSquares(unsigned int arr[][NUM_COLS], int xpos, int ypos, int 
 			for (int j = 0; j < columns; j++)
 			{				
 							
-				if ((arr[i][j] & CURRENT) == CURRENT)
+				if (i == currentLoc.x && j == currentLoc.y)
+				
+				//if ((arr[i][j] & CURRENT) == CURRENT)
 				{
 					glColor3f(0,1,0);
 					glBegin(GL_QUADS);
@@ -105,8 +103,17 @@ void drawGridUsingSquares(unsigned int arr[][NUM_COLS], int xpos, int ypos, int 
 				count++;
 
 				char *name = "";
-				char buf[32] = { 0 };	
-				sprintf(buf, "%s%d", name, floodValues[i][j]);			
+				char buf[32] = { 0 };
+				if (xpos > 50)
+				{
+						
+					sprintf(buf, "%s%d", name, floodValues[i][j]);	
+				}
+				else
+				{
+					sprintf(buf, "%s%d", name, floodValuesForResult[i][j]);	
+				}
+						
 				char* k = buf;
 				glColor3f(1,1,0);
 				renderBitmapString(xpos+size*j,ypos+size*i+size/2,k);
@@ -176,14 +183,19 @@ void renderScene(void)
 	start.x = 0;
 	start.y = 0;
 
-	floodFill(emptyMazeArray,floodValues, goal);
-	//solveMaze(completeMazeArray,emptyMazeArray,start);
+	// map walls
+	// floodfill
+	// solvemaze
 
+	checkSurroundingWalls(completeMazeArray,emptyMazeArray,currentLoc.x, currentLoc.y);
+	floodFill(emptyMazeArray,floodValues, goal);
+	solveMaze(completeMazeArray,floodValues,emptyMazeArray,start, &currentLoc);
+	
 	/* once its figured out to pass a queue<nodes> as an array, the next if statement can be moved to
 	floodfill.cpp and modified from there or 
 	*/
 
-	
+	/*
 	if (Q.size() != 0)
 	{
 		node p = Q.front();		
@@ -216,10 +228,12 @@ void renderScene(void)
 			node a = {p.x,p.y-1,WEST};
 			Q.push(a);			
 		}
-	}	
+	}	*/
 	
 	drawGridUsingSquares(completeMazeArray,5,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
 	drawGridUsingSquares(emptyMazeArray,NUM_COLS*SIDE_SIZE+NUM_COLS*2,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
+	//drawGridUsingSquares(emptyMazeArray,5,NUM_COLS*SIDE_SIZE+NUM_COLS*2,SIDE_SIZE, NUM_ROWS,NUM_COLS);
+
 	sleep(100);
 	glFlush();	
 }
@@ -229,6 +243,15 @@ void initializeWindow()
 	node p = {0,0};	
 	Q.push(p);	
 	MakeMaze(completeMazeArray,10);
+
+	currentLoc.x = 0;
+	currentLoc.y = 0;
+	
+	Loc g;
+	g.x = 8;
+	g.y = 8;
+
+	floodFill(completeMazeArray,floodValuesForResult, g);
 
 	for(int r = 0; r <16; r++)
 	{
