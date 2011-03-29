@@ -604,31 +604,52 @@ void modifiedFloodFill(unsigned int currentMazeArray[][16], unsigned int floodVa
 	cout << "Count " << count << endl;
 }
 
-bool checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc)
+int checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc)
 {
 	Loc tempLoc = currentLoc;
-	unsigned int currentFloodValue = floodValues[tempLoc.x ][tempLoc.y];
-	if((tempLoc.y > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & WEST) != WEST) && (floodValues[tempLoc.x ][tempLoc.y-1] < currentFloodValue) && (floodValues[tempLoc.x ][tempLoc.y-1] & 128) == 128 )
+
+	//dont need to check the goal location
+	if (floodValues[tempLoc.x][tempLoc.y])
+		return (-1);
+
+	//find the minimum value of the neighbors
+	unsigned int minNeighbor;
+	minNeighbor = 255;
+
+
+	//West
+	if((tempLoc.y > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & WEST) != WEST))
 	{
-		return false;
+		if (floodValues[tempLoc.x][tempLoc.y-1] < minNeighbor)
+			minNeighbor = floodValues[tempLoc.x][tempLoc.y-1];
 	}	
-
-	if((tempLoc.y < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & EAST) != EAST) && (floodValues[tempLoc.x ][tempLoc.y+1] < currentFloodValue) && (floodValues[tempLoc.x ][tempLoc.y+1] & 128) == 128)
+	//North
+	if((tempLoc.x > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & NORTH) != NORTH))
 	{
-		return false;		
+		if (floodValues[tempLoc.x-1][tempLoc.y] < minNeighbor)
+			minNeighbor = floodValues[tempLoc.x-1][tempLoc.y];
 	}
-
-	if((tempLoc.x > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & NORTH) != NORTH) && (floodValues[tempLoc.x-1][tempLoc.y] < currentFloodValue) && (floodValues[tempLoc.x-1 ][tempLoc.y] & 128) == 128)
+	//East
+	if((tempLoc.y < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & EAST) != EAST))
 	{
-		return false;		
+		if (floodValues[tempLoc.x][tempLoc.y+1] < minNeighbor)
+			minNeighbor = floodValues[tempLoc.x][tempLoc.y+1];
 	}
-
-	if((tempLoc.x < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & SOUTH) != SOUTH) && (floodValues[tempLoc.x+1][tempLoc.y] < currentFloodValue) && (floodValues[tempLoc.x+1 ][tempLoc.y] & 128) == 128)
+	//South
+	if((tempLoc.x < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & SOUTH) != SOUTH))
 	{
-		return false;	
+		if (floodValues[tempLoc.x+1][tempLoc.y] < minNeighbor)
+			minNeighbor = floodValues[tempLoc.x+1][tempLoc.y];
 	}
-	return true;
 	
+	//the current cell values
+	unsigned int currentFloodValue = floodValues[tempLoc.x][tempLoc.y];
+
+	//if the cell value isn't equal to 1 + the min neighbor, return the value of the minimum neighbor
+	if (currentFloodValue != 1 + minNeighbor)
+		return (minNeighbor);
+	else //cell does not need to be updated
+		return (-1);
 
 }
 
