@@ -8,7 +8,7 @@
 int main(int argc, char** argv)
 {
 	/* initialize random seed: */
-	srand( time(NULL) );
+	//srand( time(NULL) );
 	glutInit(&argc, argv);
 	initializeWindow();
 	
@@ -16,7 +16,6 @@ int main(int argc, char** argv)
 	we will be able to initalize everything here. For now, because of the way
 	glut works, they are globals in GUI.cpp	
 	*/
-
 
 	return 0;
 	

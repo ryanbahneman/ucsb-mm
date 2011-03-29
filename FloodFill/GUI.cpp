@@ -8,7 +8,7 @@
 #include <GL/glut.h>
 
 // initialization of the global variables used for the gui
-unsigned int completeMazeArray[16][16]; 
+unsigned int completeMazeArray[NUM_ROWS][NUM_COLS]; 
 unsigned int emptyMazeArray[NUM_ROWS][NUM_COLS];
 unsigned int floodValues[NUM_ROWS][NUM_COLS];
 
@@ -17,9 +17,10 @@ unsigned int floodValuesForResult[NUM_ROWS][NUM_COLS];
 
 // needs to be here so it can use while loop in gui
 Loc currentLoc;
+Loc goal;
+int found;
 
-queue<node> Q;
-
+// METHODS USED FOR GUI
 void renderBitmapString( float x, float y, char *string) 
 {  
   char *c;
@@ -29,7 +30,7 @@ void renderBitmapString( float x, float y, char *string)
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10 , *c);
   }
 }
-// METHODS USED FOR GUI
+
 void drawGridUsingSquares(unsigned int arr[][NUM_COLS], int xpos, int ypos, int size, int rows, int columns)
 {
 		int x = xpos;
@@ -43,12 +44,15 @@ void drawGridUsingSquares(unsigned int arr[][NUM_COLS], int xpos, int ypos, int 
 		{
 			for (int j = 0; j < columns; j++)
 			{				
-							
-				if (i == currentLoc.x && j == currentLoc.y)
 				
+				if (found == 1)
+					glColor3f(0,1,0);
+				else
+					glColor3f(0,1,1);
+				if (i == currentLoc.x && j == currentLoc.y)
 				//if ((arr[i][j] & CURRENT) == CURRENT)
 				{
-					glColor3f(0,1,0);
+					
 					glBegin(GL_QUADS);
 						glVertex2f(xpos+size*j,			    ypos+size*i);     // TOP LEFT	
 						glVertex2f(xpos+size*j+size,		ypos+size*i);     // TOP RIGHT
@@ -106,14 +110,12 @@ void drawGridUsingSquares(unsigned int arr[][NUM_COLS], int xpos, int ypos, int 
 				char buf[32] = { 0 };
 				if (xpos > 50)
 				{
-						
 					sprintf(buf, "%s%d", name, floodValues[i][j]);	
 				}
 				else
 				{
 					sprintf(buf, "%s%d", name, floodValuesForResult[i][j]);	
-				}
-						
+				}						
 				char* k = buf;
 				glColor3f(1,1,0);
 				renderBitmapString(xpos+size*j,ypos+size*i+size/2,k);
@@ -143,106 +145,49 @@ void glEnable2D()
     glLoadIdentity();
 }
 
-void checkSurroundingWalls(unsigned int actualMaze[][NUM_COLS], unsigned int unmappedMaze[][NUM_COLS], int x, int y)
-{
-	if ((actualMaze[x][y] & NORTH) == NORTH)
-	{
-
-		unmappedMaze[x][y] |= NORTH;
-		unmappedMaze[x-1][y] |= SOUTH;
-	}
-	if ((actualMaze[x][y] & SOUTH) == SOUTH)
-	{
-		unmappedMaze[x][y] |= SOUTH;
-		unmappedMaze[x+1][y] |= NORTH;
-	}		
-	if ((actualMaze[x][y] & WEST) == WEST)
-	{
-		unmappedMaze[x][y] |= WEST;
-		unmappedMaze[x][y-1] |= EAST;
-	}		
-	if ((actualMaze[x][y] & EAST) == EAST)
-	{
-		unmappedMaze[x][y] |= EAST;
-		unmappedMaze[x][y+1] |= WEST;
-	}
-	
-}
-
+// RENDERING METHOD
 void renderScene(void) 
 {	
 	glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
-	glEnable2D();	
-
-	Loc goal;
-	goal.x = 8;
-	goal.y = 8;
+	glEnable2D();		
 
 	Loc start;
 	start.x = 0;
 	start.y = 0;
 
+	if (found == 0)
+	{
+		//start.x == 8;
+		//start.y == 8;
+		goal.x = 0;
+		goal.y = 0;		
+		//floodFill(emptyMazeArray,floodValues, currentLoc, start);
+	}
 	// map walls
 	// floodfill
 	// solvemaze
 
-	checkSurroundingWalls(completeMazeArray,emptyMazeArray,currentLoc.x, currentLoc.y);
-	floodFill(emptyMazeArray,floodValues, goal);
-	solveMaze(completeMazeArray,floodValues,emptyMazeArray,start, &currentLoc);
+	mapSurroundings(completeMazeArray,emptyMazeArray,currentLoc.x, currentLoc.y);
+	//floodFill(emptyMazeArray,floodValues, currentLoc, goal);
+	modifiedFloodFill(emptyMazeArray,floodValues, currentLoc);
+	solveMaze(completeMazeArray,floodValues,emptyMazeArray,&currentLoc,&found);
 	
 	/* once its figured out to pass a queue<nodes> as an array, the next if statement can be moved to
 	floodfill.cpp and modified from there or 
 	*/
-
-	/*
-	if (Q.size() != 0)
-	{
-		node p = Q.front();		
-		completeMazeArray[p.x][p.y] = completeMazeArray[p.x][p.y] | 16;					//x y are set to 0, since thats where the mouse starts from in this case
-		checkSurroundingWalls(completeMazeArray,emptyMazeArray,p.x,p.y);
 		
-		Q.pop();
-		if (p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & SOUTH) == 0 && (completeMazeArray[p.x+1][p.y] & TRAVELED) != TRAVELED ) // CHECK SOUTH
-		{
-			completeMazeArray[p.x+1][p.y] |= 16;
-			node a = {p.x+1,p.y,SOUTH};			
-			Q.push(a);
-		}			
-		if (p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & EAST) == 0 && (completeMazeArray[p.x][p.y+1] & TRAVELED) != TRAVELED ) // CHECK EAST
-		{
-			completeMazeArray[p.x][p.y+1] |= 16;
-			node a = {p.x,p.y+1,EAST};			
-			Q.push(a);
-		}	
-		if (p.x > 0 && p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & NORTH) == 0 && (completeMazeArray[p.x-1][p.y] & TRAVELED) != TRAVELED ) // CHECK NORTH
-		{
-			completeMazeArray[p.x-1][p.y] |= 16;
-			node a = {p.x-1,p.y,NORTH};
-			Q.push(a);			
-		
-		}		
-		if (p.y > 0 && p.x < NUM_ROWS && p.y < NUM_COLS && (completeMazeArray[p.x][p.y] & WEST) == 0 && (completeMazeArray[p.x][p.y-1] & TRAVELED) != TRAVELED ) // CHECK WEST
-		{
-			completeMazeArray[p.x][p.y-1] |= 16;
-			node a = {p.x,p.y-1,WEST};
-			Q.push(a);			
-		}
-	}	*/
-	
 	drawGridUsingSquares(completeMazeArray,5,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
 	drawGridUsingSquares(emptyMazeArray,NUM_COLS*SIDE_SIZE+NUM_COLS*2,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
-	//drawGridUsingSquares(emptyMazeArray,5,NUM_COLS*SIDE_SIZE+NUM_COLS*2,SIDE_SIZE, NUM_ROWS,NUM_COLS);
-
-	sleep(100);
+	
+	sleep(1000);
 	glFlush();	
 }
 void initializeWindow()
 {
-	Q.empty();
-	node p = {0,0};	
-	Q.push(p);	
 	MakeMaze(completeMazeArray,10);
+
+	found = 1;
 
 	currentLoc.x = 0;
 	currentLoc.y = 0;
@@ -251,7 +196,10 @@ void initializeWindow()
 	g.x = 8;
 	g.y = 8;
 
-	floodFill(completeMazeArray,floodValuesForResult, g);
+	goal.x = 8;
+	goal.y = 8;
+
+	floodFill(completeMazeArray,floodValuesForResult, currentLoc, g);
 
 	for(int r = 0; r <16; r++)
 	{
@@ -260,6 +208,8 @@ void initializeWindow()
 			emptyMazeArray[r][c] = 256;
 		}
 	}	
+
+	floodFill(emptyMazeArray,floodValues, currentLoc, goal);
 
 	// initialize window
 	glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
