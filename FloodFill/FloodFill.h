@@ -5,7 +5,7 @@ void floodFill(unsigned int currentMazeArray[][16], unsigned int floodValues[][1
 void modifiedFloodFill(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc);
 bool checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc);
 
-bool checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc);
+int checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc);
 
 
 void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodvalues[][16], unsigned int emptyMazeArray[][16], 
