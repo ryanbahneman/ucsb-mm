@@ -9,6 +9,7 @@
 #define TRAVELED 16 //00010000
 #define FORK 32     //00010000
 #define CURRENT 64  //00010000
+#define UNTRAVELED 128
 
 #define SIDE 16 //number of cells per side
 #define SIDE_SIZE 20
