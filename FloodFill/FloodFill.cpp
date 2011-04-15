@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "FloodFill.h"
 #include "Maze_Definitions.h"
+#include <stack>
 #include <GL/glut.h>
 
 
@@ -43,12 +44,13 @@ void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodValues[][1
 {
 	int x = current->x;
 	int y = current->y;
-	
+	cout << emptyMazeArray[current->x][current->y];
 	int min = 1000;
 
-	if((current->y >= 0) && ((emptyMazeArray[current->x][current->y] & WEST) != WEST)) 
+	if((current->y > 0) && ((emptyMazeArray[current->x][current->y] & WEST) != WEST)) 
 	{
-		
+			
+		cout << "!!!!!!!!!!!" << endl;
 		if (min > floodValues[current->x][current->y-1])
 		{
 			min = floodValues[current->x][current->y-1];
@@ -56,7 +58,7 @@ void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodValues[][1
 			y = current->y-1;
 		}	
 	}
-	if((current->y <= 15) && ((emptyMazeArray[current->x][current->y] & EAST) != EAST)) 
+	if((current->y < 15) && ((emptyMazeArray[current->x][current->y] & EAST) != EAST)) 
 	{
 		if (min > floodValues[current->x][current->y+1])
 		{
@@ -66,7 +68,7 @@ void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodValues[][1
 			y = current->y+1;
 		}	
 	}
-	if((current->x <= 15) && ((emptyMazeArray[current->x][current->y] & SOUTH) != SOUTH)) 
+	if((current->x < 15) && ((emptyMazeArray[current->x][current->y] & SOUTH) != SOUTH)) 
 	{
 		if (min > floodValues[current->x+1][current->y])
 		{
@@ -75,7 +77,7 @@ void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodValues[][1
 			y = current->y;
 		}	
 	}
-	if((current->x >= 0) && ((emptyMazeArray[current->x][current->y] & NORTH) != NORTH)) 
+	if((current->x > 0) && ((emptyMazeArray[current->x][current->y] & NORTH) != NORTH)) 
 	{
 		if (min > floodValues[current->x-1][current->y])
 		{
@@ -101,8 +103,9 @@ void solveMaze(unsigned int currentMazeArray[][16], unsigned int floodValues[][1
 	current->x = x;
 	current->y = y;
 
-	cout << endl;
+	cout << current->x << " " << current->y << endl;
 
+	
 	//if (emptyMazeArray
 }
 
@@ -330,278 +333,149 @@ void modifiedFloodFill(unsigned int currentMazeArray[][16], unsigned int floodVa
 	Loc nextQueue[256];
 	int nextQueueLength = 0;	
 	
-	for(int r = 0; r < 16; r++)
-	{
-		for(int c = 0; c < 16; c++)
-		{
-			floodValues[r][c] |= 128;			
-		}
-	}	
-
-	bool reFlood = checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, currentLoc);
-	if (reFlood == false)
-	{		
-		for(int r = 0; r < 16; r++)
-		{
-			for(int c = 0; c < 16; c++)
-			{
-				floodValues[r][c] &= 127;			
-			}
-		}
-		cout << "!!!!!!!";
-		
-		return;
-	}
-
-	bool valueUpdated = false;
 	currentQueue[currentQueueLength] = currentLoc;
 	currentQueueLength++;
 
 	// MODIFIED FLOODFILL
 
-	while(!complete)
+	stack<Loc> s;
+	s.push(currentLoc);
+
+	while(!s.empty())
 	{
 		count++;
-		valueUpdated = false;
-		for (int k = 0; k < currentQueueLength; k++)
+		Loc location = s.top();
+		tempLoc = location;
+		s.pop();
+
+		int currentDistance = floodValues[tempLoc.x][tempLoc.y];
+		int result = checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, tempLoc);
+		//cout << result;
+
+		if (result == -1)
 		{
-		
-			tempLoc = currentQueue[k];		
-			if((tempLoc.y > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & WEST) != WEST) && (floodValues[tempLoc.x ][tempLoc.y-1] & 128) == 128)
+			continue;
+		}
+		else
+		{
+			floodValues[tempLoc.x][tempLoc.y] = result + 1;
+			int tempVal = floodValues[tempLoc.x][tempLoc.y];
+			if((tempLoc.y > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & WEST) != WEST))
 			{
 				possibleNeighbor.x = tempLoc.x;
-				possibleNeighbor.y = tempLoc.y - 1;				
-				//check to see if the neighbor is in the current queue
-				bool addToQueue = true;
-				for(int l = 0; l < currentQueueLength; l++)
-				{
-					//don't check yourself
-					if(l == k)
-						continue;
-					if(currentQueue[l].x == possibleNeighbor.x && currentQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}
-				//see if it has been added to the next queue
-				for(int l = 0; l < nextQueueLength; l++)
-				{
-					if(nextQueue[l].x == possibleNeighbor.x && nextQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}
-				//add to next queue
-				if(addToQueue == true)
-				{
-					if (!valueUpdated)
-					{
-						unsigned int currentVal = floodValues[tempLoc.x][tempLoc.y];
-						unsigned int neighborVal = floodValues[possibleNeighbor.x][possibleNeighbor.y]+1;
-
-						floodValues[tempLoc.x][tempLoc.y] = neighborVal;
-						valueUpdated = true;
-					}
-					
-					if (checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, possibleNeighbor))
-					{
-						nextQueue[nextQueueLength] = possibleNeighbor;
-						nextQueueLength++;
-					}
-					else
-					{
-
-					}			
-					
-				}
-				
-					
+				possibleNeighbor.y = tempLoc.y - 1;	
+				s.push(possibleNeighbor);								
 			}
 
 			//East
-		    //check to see if there is a cell to the right & there is no wall to the east & the cell to the left hasn't been assigned a value
-			if((tempLoc.y < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & EAST) != EAST) && (floodValues[tempLoc.x ][tempLoc.y+1] & 128) == 128)
+			//check to see if there is a cell to the right & there is no wall to the east & the cell to the left hasn't been assigned a value
+			if((tempLoc.y < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & EAST) != EAST))
 			{
 				possibleNeighbor.x = tempLoc.x;
 				possibleNeighbor.y = tempLoc.y+1;
-				//check to see if the neighbor is in the current queue
-				bool addToQueue = true;
-				for(int l = 0; l < currentQueueLength; l++)
-				{
-					//don't check yourself
-					if(l == k)
-						continue;
-					if(currentQueue[l].x == possibleNeighbor.x && currentQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}
-				//see if it has been added to the next queue
-				for (int l = 0; l < nextQueueLength; l++)
-				{
-					if(nextQueue[l].x == possibleNeighbor.x && nextQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}
-				//add to next queue
-				if(addToQueue == true)
-				{
-					if (!valueUpdated)
-					{
-						unsigned int currentVal = floodValues[tempLoc.x][tempLoc.y];
-						unsigned int neighborVal = floodValues[possibleNeighbor.x][possibleNeighbor.y]+1;
-
-						floodValues[tempLoc.x][tempLoc.y] = neighborVal;
-						valueUpdated = true;
-					}
-					if (checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, possibleNeighbor))
-					{
-						nextQueue[nextQueueLength] = possibleNeighbor;
-						nextQueueLength++;
-					}
-					else
-					{
-
-					}				
-					
-				}
+				s.push(possibleNeighbor);	
 				
 			}
 
 			//North
 				//check to see if there is a cell to the left & there is no wall to the west & the cell to the left hasn't been assigned a value
-			if((tempLoc.x > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & NORTH) != NORTH) && (floodValues[tempLoc.x-1][tempLoc.y] & 128) == 128)
+			if((tempLoc.x > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & NORTH) != NORTH))
 			{
 				possibleNeighbor.x = tempLoc.x-1;
 				possibleNeighbor.y = tempLoc.y;				
-			
-				bool addToQueue = true;
-				for(int l = 0; l < currentQueueLength; l++)
-				{
-					//don't check yourself
-					if(l == k)
-						continue;
-					if(currentQueue[l].x == possibleNeighbor.x && currentQueue[l].y == possibleNeighbor.y){
-						addToQueue = false;
-						break;
-					}
-				}
-				for(int l = 0; l < nextQueueLength; l++)
-				{
-					if(nextQueue[l].x == possibleNeighbor.x && nextQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}
-				if(addToQueue == true)
-				{
-					if (!valueUpdated)
-					{
-						unsigned int currentVal = floodValues[tempLoc.x][tempLoc.y];
-						unsigned int neighborVal = floodValues[possibleNeighbor.x][possibleNeighbor.y]+1;
-
-						floodValues[tempLoc.x][tempLoc.y] = neighborVal;
-						valueUpdated = true;
-					}
-					if (checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, possibleNeighbor))
-					{
-						nextQueue[nextQueueLength] = possibleNeighbor;
-						nextQueueLength++;
-					}
-					else
-					{
-
-					}				
-					
-				}
+				s.push(possibleNeighbor);	
 				
 			}
 			//South			
-			if((tempLoc.x < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & SOUTH) != SOUTH) && (floodValues[tempLoc.x+1][tempLoc.y] & 128) == 128)
+			if((tempLoc.x < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & SOUTH) != SOUTH))
 			{
 				possibleNeighbor.x = tempLoc.x+1;
 				possibleNeighbor.y = tempLoc.y;
-				
-				//check to see if the neighbor is in the current queue
-				bool addToQueue = true;
-				for(int l = 0; l < currentQueueLength; l++)
-				{
-					//don't check yourself
-					if(l == k)
-						continue;
-					if(currentQueue[l].x == possibleNeighbor.x && currentQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}				
-				for(int l = 0; l < nextQueueLength; l++)
-				{
-					if(nextQueue[l].x == possibleNeighbor.x && nextQueue[l].y == possibleNeighbor.y)
-					{
-						addToQueue = false;
-						break;
-					}
-				}				
-				if(addToQueue == true)
-				{
-					if (!valueUpdated)
-					{
-						unsigned int currentVal = floodValues[tempLoc.x][tempLoc.y];
-						unsigned int neighborVal = floodValues[possibleNeighbor.x][possibleNeighbor.y]+1;
-
-						floodValues[tempLoc.x][tempLoc.y] = neighborVal;
-						valueUpdated = true;
-					}
-					if (checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, possibleNeighbor))
-					{
-						nextQueue[nextQueueLength] = possibleNeighbor;
-						nextQueueLength++;
-					}
-					else
-					{
-
-					}				
-					
-				}
-				
+				s.push(possibleNeighbor);				
 			}
-		}//end of current queue for loop
-
-		//check to see that the next queue isn't empty
-		if(nextQueueLength != 0)
-		{
-			//copy the next queue to the current queue
-			for(int k = 0; k < nextQueueLength; k++)
-			{
-				currentQueue[k] = nextQueue[k];
-			}
-			//updat queue lengths
-			currentQueueLength = nextQueueLength;
-			nextQueueLength = 0;			
-		}
-		else
-		{
-			complete = true;
-		}
-		cout << "????" << endl;
-	}
-
-	for(int r = 0; r < 16; r++)
-	{
-		for(int c = 0; c < 16; c++)
-		{
-			floodValues[r][c] &= 127;			
 		}
 	}
+	//cout << endl;
+		//for (int k = 0; k < currentQueueLength; k++)
+		//{
+		//	tempLoc = currentQueue[k];		
+		//	int currentDistance = floodValues[tempLoc.x][tempLoc.y];
 
-	cout << "Count " << count << endl;
+		//	int result = checkIfMazeNeedsToBeReflooded(currentMazeArray, floodValues, currentLoc);
+		//	//cout << result;
+
+		//	if (result == -1)
+		//	{
+		//		continue;
+		//	}
+		//	else
+		//	{
+		//		floodValues[tempLoc.x][tempLoc.y] = result + 1;
+		//		if((tempLoc.y > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & WEST) != WEST))
+		//		{
+		//			possibleNeighbor.x = tempLoc.x;
+		//			possibleNeighbor.y = tempLoc.y - 1;				
+		//			
+		//			nextQueue[nextQueueLength] = possibleNeighbor;
+		//			nextQueueLength++;						
+		//							
+		//		}
+
+		//		//East
+		//		//check to see if there is a cell to the right & there is no wall to the east & the cell to the left hasn't been assigned a value
+		//		if((tempLoc.y < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & EAST) != EAST))
+		//		{
+		//			possibleNeighbor.x = tempLoc.x;
+		//			possibleNeighbor.y = tempLoc.y+1;
+		//			//check to see if the neighbor is in the current queue
+		//			nextQueue[nextQueueLength] = possibleNeighbor;
+		//			nextQueueLength++;	
+		//		
+		//		}
+
+		//		//North
+		//			//check to see if there is a cell to the left & there is no wall to the west & the cell to the left hasn't been assigned a value
+		//		if((tempLoc.x > 0) && ((currentMazeArray[tempLoc.x][tempLoc.y] & NORTH) != NORTH))
+		//		{
+		//			possibleNeighbor.x = tempLoc.x-1;
+		//			possibleNeighbor.y = tempLoc.y;				
+		//	
+		//			nextQueue[nextQueueLength] = possibleNeighbor;
+		//			nextQueueLength++;	
+		//		
+		//		}
+		//		//South			
+		//		if((tempLoc.x < 15) && ((currentMazeArray[tempLoc.x][tempLoc.y] & SOUTH) != SOUTH))
+		//		{
+		//			possibleNeighbor.x = tempLoc.x+1;
+		//			possibleNeighbor.y = tempLoc.y;
+		//		
+		//			nextQueue[nextQueueLength] = possibleNeighbor;
+		//			nextQueueLength++;	
+		//		
+		//		}
+		//	}
+
+		//	
+		//}//end of current queue for loop
+
+		////check to see that the next queue isn't empty
+		//if(nextQueueLength != 0)
+		//{
+		//	//copy the next queue to the current queue
+		//	for(int k = 0; k < nextQueueLength; k++)
+		//	{
+		//		currentQueue[k] = nextQueue[k];
+		//	}
+		//	//updat queue lengths
+		//	currentQueueLength = nextQueueLength;
+		//	nextQueueLength = 0;			
+		//}
+		//else
+		//{
+		//	complete = true;
+		//}		
+		
 }
 
 int checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned int floodValues[][16], Loc currentLoc)
@@ -609,7 +483,7 @@ int checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned 
 	Loc tempLoc = currentLoc;
 
 	//dont need to check the goal location
-	if (floodValues[tempLoc.x][tempLoc.y])
+	if (floodValues[tempLoc.x][tempLoc.y] == 0)
 		return (-1);
 
 	//find the minimum value of the neighbors
@@ -644,6 +518,8 @@ int checkIfMazeNeedsToBeReflooded(unsigned int currentMazeArray[][16], unsigned 
 	
 	//the current cell values
 	unsigned int currentFloodValue = floodValues[tempLoc.x][tempLoc.y];
+
+	//cout << minNeighbor << endl;
 
 	//if the cell value isn't equal to 1 + the min neighbor, return the value of the minimum neighbor
 	if (currentFloodValue != 1 + minNeighbor)
