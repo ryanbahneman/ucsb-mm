@@ -180,7 +180,7 @@ void renderScene(void)
 	drawGridUsingSquares(completeMazeArray,5,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
 	drawGridUsingSquares(emptyMazeArray,NUM_COLS*SIDE_SIZE+NUM_COLS*2,5,SIDE_SIZE, NUM_ROWS,NUM_COLS);
 	
-	sleep(1000);
+	sleep(100);
 	glFlush();	
 }
 void initializeWindow()
